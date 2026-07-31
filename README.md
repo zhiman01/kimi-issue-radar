@@ -31,6 +31,7 @@
 | 静默挂起类 blocker | 约 20+ 条指向同一失败模式 |
 | 付费用户额度投诉 | 多条年订阅 / 月订阅用户反馈 |
 | 模型质量反馈 | `model_behavior` 仅 7 条（1.6%） |
+| **MCP 相关 issue** | **23 条，blocker 率 43.5%，是全场平均的 2 倍以上** |
 
 ![Kimi 社区 Issue 类目分布](category_distribution.png)
 
@@ -207,10 +208,11 @@ if docs_gap_count > 0:
 | 文件 | 说明 |
 |---|---|
 | `radar.py` | 主脚本：抓取 + 分析 + 报告 |
-| `generate_chart.py` | 从 `issues_analyzed.json` 生成类目分布图 |
+| `generate_chart.py` | 从 `issues_analyzed.json` 生成类目分布、severity、仓库对比、MCP 洞察图 |
 | `requirements.txt` | Python 依赖 |
 | `report.md` | 最终洞察报告 |
 | `EVOLUTION.md` | 技术迭代链路：从 mock 到真实 API 的踩坑记录 |
+| `mcp_insight.png` | MCP 相关 issue 与全场平均的 blocker / open 率对比图 |
 | `issues_raw.json` | 432 条原始 issue（body 截断 1500） |
 | `issues_raw_800.json` | 432 条原始 issue（body 截断 800，用于快速分析） |
 | `issues_analyzed.json` | 带 category / severity / evidence 的分析结果 |
@@ -249,6 +251,20 @@ if docs_gap_count > 0:
 - 兜底：`other`
 
 **粒度取舍**：没有再细分（如把 `agent_runtime` 拆成 MCP/子 agent/工具调用），因为 MVP 阶段它们都归产品团队，拆太细不会增加行动价值，反而让模型更容易分错。`other` 不是设计缺陷，而是拒绝猜测的安全阀。
+
+#### 先验体系也需要被真实数据迭代：MCP 是一个被稀释的信号
+
+按原 8 类目体系，MCP 相关问题被分进 `agent_runtime` 或 `feature_request`。但二次关键词挖掘发现：
+
+- 432 条 issue 中，标题或正文提到 **MCP** 的仅 23 条（5.3%）
+- 这 23 条里，**blocker 占 10 条，致命率高达 43.5%**
+- 全场平均 blocker 率仅为 20.4% —— **MCP 的致命率是平均的 2 倍以上**
+
+![MCP 相关 issue 致命率对比](mcp_insight.png)
+
+这说明：MCP 不是普通子问题，它的严重程度被 `agent_runtime` 大类平均给稀释了。如果持续只做 8 个粗粒度类目，这个信号不会被单独看见。这也是我在面试稿里提到的 **"badcase 归因 → 迭代分类体系"** 方法论的实例：先验设计遇到真实数据后，应回到数据本身判断粒度是否合适。
+
+当前版本没有把 MCP 拆成独立类目（避免重新跑模型的高成本），但在 `report.md` 中新增了「MCP 专项洞察」小节，并生成了 `mcp_insight.png`。后续如果要常态化分析，建议把 MCP 作为一个独立观测维度跟踪。
 
 ### 强制 evidence
 

@@ -15,6 +15,7 @@
 - [3. Severity 分布](#3-severity-分布)
 - [4. Blocker 级问题清单](#4-blocker-级问题清单)
 - [5. 核心洞察](#5-核心洞察)
+- [6. MCP 专项洞察](#6-mcp-专项洞察)
 - [附录：分析方法](#附录分析方法)
 
 ---
@@ -35,6 +36,8 @@
 1. 🚨 **接入与运行时是主战场** —— `agent_runtime` + `ide_integration` 合计 178 条，占 41%
 2. 🔇 **"静默挂起"正在流失新用户** —— 20+ 条 blocker 指向同一失败模式：不报错、直接卡死
 3. 💸 **付费用户额度体验差** —— 年订阅 / 月订阅用户均出现任务中断、token 作废、无预警限流
+
+**一个被原分类稀释的信号**：MCP 相关 issue 仅 23 条（5.3%），但 blocker 率高达 **43.5%**，是全场平均（20.4%）的 **2 倍以上**。
 
 ---
 
@@ -185,6 +188,51 @@
 这与我首次调用 K3 API 时的实测一致——请求仅想回复两字，却因思考未结束撞上 token 上限而返回空结果。
 
 **建议**：在「快速开始」文档中明确提示 K3 的思考特性与 token 预算，可为新用户规避大量困惑。
+
+---
+
+## 6. MCP 专项洞察
+
+> 这是一个**后验发现**：MCP 相关问题在原 8 类目体系中被归入 `agent_runtime` 或 `feature_request`，没有做单独拆分。二次关键词挖掘显示，它的致命率被大类平均显著稀释。
+
+### 关键数据
+
+| 指标 | MCP 相关 issue | 全部 issue |
+|---|---:|---:|
+| 数量 | 23 | 432 |
+| 占比 | 5.3% | 100% |
+| blocker 数 | 10 | 88 |
+| **blocker 率** | **43.5%** | **20.4%** |
+| 仍 open | 20 | 384 |
+| open 率 | 87.0% | 88.9% |
+
+![MCP 相关 issue 致命率对比](mcp_insight.png)
+
+### 代表性问题
+
+| issue | 等级 | 问题概括 |
+|---|---|---|
+| [#2328](https://github.com/MoonshotAI/kimi-code/issues/2328) | blocker | Anthropic provider 下，MCP 工具 `inputSchema` 顶层带 `oneOf/anyOf/allOf` 即 400 |
+| [#2109](https://github.com/MoonshotAI/kimi-code/issues/2109) | blocker | stdio MCP server 意外挂掉后不自动重连，调用挂到 `toolTimeoutMs` 才失败 |
+| [#2381](https://github.com/MoonshotAI/kimi-code/issues/2381) | blocker | headless 模式下 MCP 工具"宣布"了但 `select_tools` 从未真正注册进 function schema |
+| [#2010](https://github.com/MoonshotAI/kimi-code/issues/2010) | nice_to_have | Plan Mode 完全无法使用 MCP 工具 |
+| [#2075](https://github.com/MoonshotAI/kimi-code/issues/2075) | nice_to_have | 用户基于 MCP 能力边界提出跨会话记忆机制需求 |
+
+### 结论
+
+MCP 集成不是"能不能连上"的问题，而是**"连上之后不够健壮"**：
+
+- 协议边界情况（`oneOf/anyOf/allOf`）没有兜住
+- server 意外退出后没有自动重连或快速失败
+- headless / Plan Mode 等场景下工具注册存在漏洞
+
+这正好说明，**先验设计的分类体系需要被真实数据迭代**。如果 MCP 继续被埋在 `agent_runtime` 大类里，这个两倍于平均的 blocker 信号不会被单独看见。
+
+**建议动作**：
+
+1. 短期：在 MCP 集成文档中增加"常见失败模式与排查"专节，覆盖 oneOf/anyOf 限制、stdio server 生命周期、headless 注册检查。
+2. 中期：考虑把 MCP 从 `agent_runtime` 中拆出为独立观测维度，或在周报中单独跟踪 MCP blocker 趋势。
+3. 长期：radar 本身可以暴露为一个 MCP server，让 Kimi Code / Claude Code 等 host 直接在对话中查询"这周 MCP 新增 blocker 有哪些"。
 
 ---
 
