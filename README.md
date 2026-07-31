@@ -151,6 +151,21 @@ python3 radar.py \
 | `feature_request` | 产品 | 功能诉求 |
 | `other` | 兜底 | 其他 |
 
+#### 为什么设计这 8 个类目？
+
+类目按两个维度设计：**开发者使用旅程** + **内部归属方**。
+
+**使用旅程维度**：安装 → 登录/配置 → IDE 接入 → Agent 运行 → 模型调优 → 提新需求。每个类目对应其中一个卡点。
+
+**归属方维度**：每个类目直接对应一个内部团队，让 DevRel 报告能直接生成 action items：
+
+- 文档侧：`install_env`、`auth_billing`、`docs_gap`
+- 产品侧：`ide_integration`、`agent_runtime`、`feature_request`
+- 模型侧：`model_behavior`
+- 兜底：`other`
+
+**粒度取舍**：没有再细分（如把 `agent_runtime` 拆成 MCP/子 agent/工具调用），因为 MVP 阶段它们都归产品团队，拆太细不会增加行动价值，反而让模型更容易分错。`other` 不是设计缺陷，而是拒绝猜测的安全阀——信息不足时硬分类比标 other 危害更大。
+
 ### 强制 evidence
 
 每条分类必须附带 issue 原文片段，保证结论可追溯、可验证，而不是模型拍脑袋。
