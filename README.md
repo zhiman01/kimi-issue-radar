@@ -33,17 +33,7 @@ MoonshotAI 有两个核心开源仓库：`kimi-code` 和 `kimi-agent-sdk`。它�
 
 ### 类目分布
 
-```mermaid
-pie title Issue 类目分布（432 条）
-    "feature_request" : 132
-    "agent_runtime" : 108
-    "ide_integration" : 70
-    "other" : 60
-    "install_env" : 23
-    "auth_billing" : 23
-    "docs_gap" : 9
-    "model_behavior" : 7
-```
+![Kimi 社区 Issue 类目分布](category_distribution.png)
 
 ---
 
