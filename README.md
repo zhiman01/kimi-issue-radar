@@ -155,6 +155,19 @@ python3 radar.py \
 
 每条分类必须附带 issue 原文片段，保证结论可追溯、可验证，而不是模型拍脑袋。
 
+### PR 过滤实测
+
+GitHub 的 `/issues` 接口会把 Pull Request 也混在 issues 里返回。实测调用 `GET /repos/MoonshotAI/kimi-code/issues?state=all&per_page=10&page=1` 时，返回的 10 条记录中有 **4 条是 PR**，真实 issue 仅占 60%。
+
+代码里通过判断 `pull_request` 字段是否存在来过滤：
+
+```python
+if item.get("pull_request") is not None:
+    continue
+```
+
+不过滤会导致分析结论被代码提交严重污染。
+
 ### 工程兜底
 
 - 3 次指数退避重试
