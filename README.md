@@ -2,38 +2,108 @@
 
 > 自动抓取 MoonshotAI 开源仓库 GitHub Issues，用 Kimi API 做聚类与归因，输出一份可行动的 DevRel 洞察报告。
 
-这个项目是我为 **Developer Relations (Content) Intern** 岗位准备的作品：它从开发者社区的一线反馈出发，用 AI Agent 和自动化工具把散落的 issue 收敛成产品、文档、运营都能看懂的可行动结论。
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+这个项目是为 **Developer Relations (Content) Intern** 岗位准备的作品：它从开发者社区的一线反馈出发，用自动化工具把散落的 issue 收敛成产品、文档、运营都能看懂的可行动结论。
 
 ---
 
-## 为什么做这个项目
+## 你想做什么？
 
-DevRel 内容不是“写教程”，而是回答一个问题：**开发者现在最卡在哪里？**
+选择你的起点：
 
-MoonshotAI 有两个核心开源仓库：`kimi-code` 和 `kimi-agent-sdk`。它们的 GitHub Issues 里沉淀了大量真实反馈，但零散阅读很难看出模式。这个雷达尝试把“读 issue”自动化、结构化，让文档补什么、产品修什么变得有据可依。
+| 🚀 [快速跑通](#快速开始) | 📊 [看分析结果](#核心结果) | 🛠️ [排查问题](./docs/troubleshooting.md) | 🧩 [了解设计思路](#设计亮点) |
+|---|---|---|---|
+| 5 分钟让 demo 跑起来 | 432 条 issue 的类目分布与洞察 | 常见报错和解决方式 | 类目体系、Prompt 约束、工程兜底 |
 
 ---
 
 ## 核心结果
 
-对 2026-01-27 至 2026-07-30 期间的 **432 条有效 issue** 进行分析后，得到以下关键发现：
+对 2026-01-27 至 2026-07-30 期间的 **432 条有效 issue** 分析后，得到以下关键发现：
 
 | 维度 | 结果 |
 |---|---|
 | Open / Closed | 384 / 48 |
 | 最集中类目 | `feature_request`（132 条，30.6%） |
-| 最致命类目 | `agent_runtime`（108 条 blocker 占比最高） |
+| 最致命类目 | `agent_runtime`（108 条，blocker 占比最高） |
 | 静默挂起类 blocker | 约 20+ 条指向同一失败模式 |
 | 付费用户额度投诉 | 多条年订阅 / 月订阅用户反馈 |
 | 模型质量反馈 | `model_behavior` 仅 7 条（1.6%） |
 
-> **关于样本量**：432 条是近期活跃 issue 的采样结果，不是两个仓库的全部 issue。`kimi-code` 实际约有 764 条 issue、`kimi-agent-sdk` 有 98 条。抓取层默认 `max_pages=10`，因此 `kimi-code` 只抓取到最近的 334 条有效 issue。这个样本对洞察趋势和 blocker 模式已足够，全量分析可调整分页参数。
+![Kimi 社区 Issue 类目分布](category_distribution.png)
+
+> **关于样本量**：432 条是近期活跃 issue 的采样结果。`kimi-code` 实际约有 764 条 issue，抓取层默认 `max_pages=10`，因此只取到最近的 334 条有效 issue；`kimi-agent-sdk` 共 98 条，已全量抓取。该样本足以支撑趋势和 blocker 模式洞察，全量分析可调整分页参数。
 
 完整洞察见 [`report.md`](./report.md)。
 
-### 类目分布
+---
 
-![Kimi 社区 Issue 类目分布](category_distribution.png)
+## 快速开始
+
+### 步骤 1：安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 步骤 2：运行 mock 模式验证
+
+没有 API key 也能跑通全流程：
+
+```bash
+python3 radar.py --mock
+```
+
+运行后会生成：
+- `issues_raw.json`
+- `issues_analyzed.json`
+- `report.md`
+
+### 步骤 3：接入真实数据（可选）
+
+```bash
+export GITHUB_TOKEN=ghp_xxx          # 可选，避免 60 次/小时限流
+export KIMI_API_KEY=sk-xxx           # 必须，否则自动降级为 mock 分析
+python3 radar.py
+```
+
+> 💡 **Tip**：`GITHUB_TOKEN` 不是强制的，但没有它时抓取大仓库容易触发限流。建议在 `.env` 文件里配置，项目已提供 `.env.example`。
+
+### 步骤 4：生成可视化图表
+
+```bash
+python3 generate_chart.py
+```
+
+---
+
+## 常用场景
+
+### 场景 A：只想分析报告，不想重新抓数据
+
+```bash
+python3 radar.py --skip-fetch
+```
+
+### 场景 B：想换模型或调 batch size
+
+```bash
+python3 radar.py \
+  --model kimi-k3 \
+  --batch-size 14 \
+  --body-limit 800 \
+  --timeout 180
+```
+
+### 场景 C：只分析指定仓库
+
+```bash
+python3 radar.py --repos MoonshotAI/kimi-code
+```
+
+> ⚠️ **Note**：`kimi-k3` 对大批量长文本推理较慢，当前默认模型为 `kimi-k2.7-code-highspeed`，在速度和稳定性之间更平衡。
 
 ---
 
@@ -64,50 +134,7 @@ MoonshotAI 有两个核心开源仓库：`kimi-code` 和 `kimi-agent-sdk`。它�
 
 1. **抓取层**：分页拉取 GitHub Issues，用 `pull_request` 字段过滤 PR，只保留分析必需字段，body 截断避免日志噪音。
 2. **分析层**：每批 14 条送入 Kimi API，做**受限分类**（8 个类目），输出 category / severity / one_line / evidence。
-3. **报告层**：生成总量、分布、blocker 清单与 Top 3 洞察。
-
----
-
-## 快速开始
-
-### 1. 安装依赖
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2. 无 key 验证流程
-
-```bash
-python3 radar.py --mock
-```
-
-会自动生成 `issues_raw.json`、`issues_analyzed.json`、`report.md`。
-
-### 3. 生产环境运行
-
-```bash
-export GITHUB_TOKEN=ghp_xxx          # 可选，避免 60 次/小时限流
-export KIMI_API_KEY=sk-xxx           # 必须，否则自动降级为 mock 分析
-python3 radar.py
-```
-
-### 4. 只分析已有数据
-
-```bash
-python3 radar.py --skip-fetch
-```
-
-### 5. 高级参数
-
-```bash
-python3 radar.py \
-  --model kimi-k3 \
-  --batch-size 14 \
-  --body-limit 800 \
-  --timeout 180 \
-  --raw-path issues_raw_800.json
-```
+3. **报告层**：生成总量、分布、blocker 清单与核心洞察。
 
 ---
 
@@ -116,6 +143,7 @@ python3 radar.py \
 | 文件 | 说明 |
 |---|---|
 | `radar.py` | 主脚本：抓取 + 分析 + 报告 |
+| `generate_chart.py` | 从 `issues_analyzed.json` 生成类目分布图 |
 | `requirements.txt` | Python 依赖 |
 | `report.md` | 最终洞察报告 |
 | `EVOLUTION.md` | 技术迭代链路：从 mock 到真实 API 的踩坑记录 |
@@ -123,6 +151,7 @@ python3 radar.py \
 | `issues_raw.json` | 432 条原始 issue（body 截断 1500） |
 | `issues_raw_800.json` | 432 条原始 issue（body 截断 800，用于快速分析） |
 | `issues_analyzed.json` | 带 category / severity / evidence 的分析结果 |
+| `docs/troubleshooting.md` | 常见问题和排查指南 |
 
 ---
 
@@ -156,7 +185,7 @@ python3 radar.py \
 - 模型侧：`model_behavior`
 - 兜底：`other`
 
-**粒度取舍**：没有再细分（如把 `agent_runtime` 拆成 MCP/子 agent/工具调用），因为 MVP 阶段它们都归产品团队，拆太细不会增加行动价值，反而让模型更容易分错。`other` 不是设计缺陷，而是拒绝猜测的安全阀——信息不足时硬分类比标 other 危害更大。
+**粒度取舍**：没有再细分（如把 `agent_runtime` 拆成 MCP/子 agent/工具调用），因为 MVP 阶段它们都归产品团队，拆太细不会增加行动价值，反而让模型更容易分错。`other` 不是设计缺陷，而是拒绝猜测的安全阀。
 
 ### 强制 evidence
 
@@ -203,17 +232,19 @@ if item.get("pull_request") is not None:
 - **从开发者视角体验产品**：自己调 Kimi API，踩过 temperature、max_tokens、超时等真实开发者会踩的坑
 - **自动化反馈整理**：用 Python + Kimi API 把手动读帖变成结构化洞察
 - **开发者文档优化**：报告中的洞察直接指向“文档该写什么”，如 K3 思考机制、静默挂起排查、额度预警
-- **AI Coding 生态关注**：issue 覆盖 VSCode 插件、MCP、Agent 运行时等前沿工具链
+- **AI Coding 生态关注**：issue 覆盖 VSCode 插件、MCP、Agent 运行时等前沿开发者工具链
 
 ---
 
-## 后续可扩展方向
+## 下一步可以做什么？
 
-- [ ] 时间趋势分析：哪些类目在上升 / 下降
-- [ ] 首次响应时长统计：社区运营健康度
-- [ ] 自动生成“建议补充的文档条目”清单
-- [ ] 接入 Discord / Reddit 等更多开发者社区数据源
-- [ ] cron 化：每日/每周自动生成增量报告
+- 📈 给 radar 加**时间趋势分析**：看哪些类目在上升 / 下降
+- 📝 自动生成「建议补充的文档条目」清单
+- 🔌 接入 Discord / Reddit 等更多开发者社区数据源
+- ⏰ cron 化：每日/每周自动生成增量报告
+- 🤖 把 radar 升级为「社区反馈 → 文档缺口」的 AI 自动化闭环
+
+详细扩展思路见 [`EVOLUTION.md`](./EVOLUTION.md)。
 
 ---
 

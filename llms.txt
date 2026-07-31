@@ -1,0 +1,64 @@
+# Kimi 社区 Issue 洞察雷达
+
+一个自动抓取 MoonshotAI 开源仓库 GitHub Issues，用 Kimi API 做聚类归因，输出 DevRel 洞察报告的工具。
+
+## 核心能力
+
+- 抓取 GitHub Issues 并过滤 Pull Request
+- 用受限分类体系把 issue 分为 8 个类目
+- 输出 category / severity / one_line / evidence
+- 生成 report.md 洞察报告
+- 生成 category_distribution.png 可视化图表
+
+## 快速开始
+
+```bash
+pip install -r requirements.txt
+python3 radar.py --mock
+```
+
+生产环境：
+
+```bash
+export KIMI_API_KEY=sk-xxx
+export GITHUB_TOKEN=ghp_xxx  # 可选
+python3 radar.py
+```
+
+## 关键文件
+
+- `radar.py`：主脚本
+- `generate_chart.py`：生成类目分布图
+- `report.md`：最终洞察报告
+- `EVOLUTION.md`：技术迭代和踩坑记录
+- `INTERVIEW_SCRIPT.md`：面试演讲稿
+- `docs/troubleshooting.md`：常见问题排查
+
+## 主要发现
+
+对 432 条有效 issue 分析后：
+
+- feature_request：132 条（30.6%）
+- agent_runtime：108 条（25.0%）
+- ide_integration：70 条（16.2%）
+- other：60 条（13.9%）
+- install_env：23 条（5.3%）
+- auth_billing：23 条（5.3%）
+- docs_gap：9 条（2.1%）
+- model_behavior：7 条（1.6%）
+
+88 个 blocker 中，agent_runtime 类最多（34 条）。
+
+## 技术要点
+
+- GitHub `/issues` 接口会返回 PR，需用 `pull_request` 字段过滤
+- Kimi API 当前所有模型只支持 temperature=1
+- 默认模型为 kimi-k2.7-code-highspeed，batch=14，max_tokens=12000
+- 强制模型输出 evidence（issue 原文片段）防止幻觉
+
+## 扩展方向
+
+- 时间趋势分析
+- 自动生成建议补充的文档条目
+- 接入 Discord / Reddit 等数据源
+- cron 化每日/每周报告
