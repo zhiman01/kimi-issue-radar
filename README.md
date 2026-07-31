@@ -132,16 +132,16 @@ python3 radar.py \
 
 不让模型自由发挥，而是固定 8 个类目，每个对应归属方：
 
-| 类目 | 归属方 | 含义 |
-|---|---|---|
-| `install_env` | 文档 | 安装、依赖、Node 版本、系统环境 |
-| `ide_integration` | 产品 | VSCode / JetBrains / Zed 插件、ACP 协议接入 |
-| `auth_billing` | 文档 | API key、鉴权、额度、计费 |
-| `model_behavior` | 模型 | 模型输出质量、幻觉、不 follow 指令 |
-| `agent_runtime` | 产品 | Agent 执行、工具调用、任务中断 |
-| `docs_gap` | 文档 | 文档缺失、示例不可用、说明不清 |
-| `feature_request` | 产品 | 功能诉求 |
-| `other` | 兜底 | 其他 |
+| 类目 | 中文名称 | 归属方 | 含义 |
+|---|---|---|---|
+| `install_env` | 安装环境 | 文档 | 安装、依赖、Node 版本、系统环境 |
+| `ide_integration` | IDE 集成 | 产品 | VSCode / JetBrains / Zed 插件、ACP 协议接入 |
+| `auth_billing` | 鉴权计费 | 文档 | API key、鉴权、额度、计费 |
+| `model_behavior` | 模型行为 | 模型 | 模型输出质量、幻觉、不 follow 指令 |
+| `agent_runtime` | Agent 运行时 | 产品 | Agent 执行、工具调用、任务中断 |
+| `docs_gap` | 文档缺失 | 文档 | 文档缺失、示例不可用、说明不清 |
+| `feature_request` | 功能诉求 | 产品 | 功能诉求 |
+| `other` | 其他 | 兜底 | 其他 |
 
 #### 为什么设计这 8 个类目？
 
