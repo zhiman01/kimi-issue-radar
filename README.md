@@ -206,10 +206,79 @@ if item.get("pull_request") is not None:
 
 ### 工程兜底
 
-- 3 次指数退避重试
-- JSON markdown 围栏自动剥离
-- API 异常时打印模型返回预览
-- 解析失败整批标记 `other`，不污染结论
+真实跑 LLM 批量任务时，网络抖动、模型超时、返回格式异常是常态。代码里做了四层兜底，保证流程不中断、坏结果不混入。
+
+#### 1. 指数退避重试
+
+网络瞬时失败时自动重试 3 次，间隔指数增长：2s → 4s → 8s。
+
+```python
+def retry_request(func, max_retries=3, backoff_base=2):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except requests.RequestException as e:
+            wait = backoff_base * (2 ** attempt)
+            log(f"请求失败（{attempt+1}/{max_retries}）：{e}，{wait}s 后重试…")
+            time.sleep(wait)
+```
+
+**实际效果**：本次全量 31 个 batch 中，有几次请求第一次失败，重试后成功，没有因网络问题中断。
+
+#### 2. 服务端错误详情透传
+
+Kimi API 返回 400 时，把错误体打印出来，而不是只报 "HTTP 400"。
+
+**例子**：调试初期遇到：
+
+```json
+{"error": {"message": "invalid temperature: only 1 is allowed for this model"}}
+```
+
+代码捕获后直接显示这个信息，帮我 10 秒内定位是 temperature 参数问题，而不是猜半天。
+
+```python
+if resp.status_code >= 400:
+    body = resp.text[:500]
+    raise requests.HTTPError(f"{resp.status_code} {resp.reason}: {body}", response=resp)
+```
+
+#### 3. JSON 围栏自动剥离
+
+模型偶尔会输出：
+
+````markdown
+```json
+[{"number": 1, "category": "agent_runtime"}]
+```
+````
+
+直接 `json.loads` 会失败。代码先做 strip：
+
+```python
+text = re.sub(r"^```json\s*", "", text, flags=re.IGNORECASE)
+text = re.sub(r"^```\s*", "", text)
+text = re.sub(r"\s*```$", "", text)
+```
+
+#### 4. 解析失败整批标记 `other`
+
+如果某个 batch 实在解析不了（比如模型返回空 content、JSON 被截断），不会让整个程序崩溃，而是把这批全部标为 `other`：
+
+```python
+results = [
+    {
+        "number": issue["number"],
+        "category": "other",
+        "severity": "friction",
+        "one_line": "分析失败，待人工复核",
+        "evidence": "",
+    }
+    for issue in batch
+]
+```
+
+**实际效果**：本次 432 条 issue 全部分析成功，0 个 batch 因异常进入兜底。但这层保护确保了即使遇到模型不稳定，也不会污染其他 batch 的结论。
 
 ---
 
