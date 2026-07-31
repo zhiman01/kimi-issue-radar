@@ -126,3 +126,59 @@ temperature = 1.0
 - **max_tokens 不是越大越快**：12000 比 8000 反而更稳；8000 时出现空返回可能与内部分配策略有关。
 - **大 batch + 长 body 对推理型模型是灾难**：K3 更适合小批量精排，highspeed 更适合批量归类。
 - **真实数据远比 mock 复杂**：mock 规则无法覆盖的边界（如长日志、中英混合、PR 混入）必须在真实运行中暴露。
+
+---
+
+## 7. 基于 Kimi 文档站观察的扩展方向
+
+> 本节来自对 Kimi 文档站（platform.kimi.com/docs）的观察与本项目 issue 数据的交叉分析。
+
+Kimi 文档站已经是 AI-native 架构：按用户旅程分层、组件化页面、支持 llms.txt/llms-full.txt 给 AI 读取。但从社区 issue 数据看，内容的"实战深度"和"失败模式覆盖"仍有明显缺口。以下三个方向值得作为后续项目或实习工作推进：
+
+### 7.1 做一组「从 X 迁移到 Kimi」实战指南
+
+issue 里大量反馈来自 Claude Code / Anthropic-compatible provider / Cursor 等第三方工具用户：
+
+- #2378：API 网关对 PDF document 块返回 400（Claude Code 格式兼容）
+- #2328：Anthropic provider 下 MCP tools 的 schema 问题
+- #2062：Anthropic-compatible provider 的 max_tokens 限制
+- #1796：HTTP 429 被静默吞掉
+
+文档站目前对这些工具集成着墨较少。可产出一套《从 Claude Code / Cursor / OpenAI 迁移到 Kimi》系列，每篇按「错误现象 → 根因 → 解决代码」三段式写作，直接复用 issue 里的真实踩坑案例。
+
+### 7.2 建一个「静默失败」专项排障中心
+
+本次分析发现 88 个 blocker 中大量属于"静默挂起"——系统不报错、直接卡死：
+
+| 现象 | 对应 issue | 建议文档条目 |
+|---|---|---|
+| `kimi -p` 零输出挂起 | #2358 | 非交互模式排障 |
+| Windows 每次 prompt 永久卡死 | #2219 | Windows 环境检查清单 |
+| 流式响应中途静默 | #1798 | SSE 流式连接问题排查 |
+| 429 被吞，无 Retry-After 提示 | #1796 | 限流与重试机制说明 |
+| K3 max effort 下挂起 10 分钟 | #1911 | 思考模型超时与 token 预算 |
+
+可在文档站开设「Kimi 没反应时怎么办」troubleshooting hub，把静默失败变成可排查、可恢复。
+
+### 7.3 把额度/计费体验写成「产品使用指南」
+
+付费用户对额度耗尽的处理方式极度不满：
+
+- #2389：额度耗尽静默杀掉所有 subagent
+- #1482：5 小时 deep research token 全丢
+- #158：刚充月订阅，用 4 次被限流
+
+商业层和技术层虽然在文档站物理分开，但用户体验是连续的。建议新增《Kimi 额度与任务保存指南》，覆盖额度耗尽场景、token 预算设置、长任务分段保存、429/403 恢复流程。
+
+### 7.4 把 radar 升级为「文档反馈闭环」原型
+
+Kimi 已有 llms.txt/llms-full.txt 让 AI 读文档；本 radar 可反向工作——让 AI 读社区反馈，自动发现文档缺口并建议更新条目。理想闭环：
+
+```
+社区反馈 ──雷达──▶ 结构化洞察 ──▶ 建议更新 llms-full.txt 的哪些章节
+         │                                    │
+         └────── 文档改进后观察反馈是否减少 ─────┘
+```
+
+下一步可在 `radar.py` 中增加一个扩展模块：输入 `issues_analyzed.json`，输出建议新增/更新的文档条目清单（含对应 issue 链接和证据），让 demo 从一次性报告升级为可复用的 DevRel 工具。
+
