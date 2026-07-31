@@ -211,7 +211,6 @@ if docs_gap_count > 0:
 | `requirements.txt` | Python 依赖 |
 | `report.md` | 最终洞察报告 |
 | `EVOLUTION.md` | 技术迭代链路：从 mock 到真实 API 的踩坑记录 |
-| `INTERVIEW_SCRIPT.md` | 基于本项目整理的 DevRel 面试演讲稿 |
 | `issues_raw.json` | 432 条原始 issue（body 截断 1500） |
 | `issues_raw_800.json` | 432 条原始 issue（body 截断 800，用于快速分析） |
 | `issues_analyzed.json` | 带 category / severity / evidence 的分析结果 |

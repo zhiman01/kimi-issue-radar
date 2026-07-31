@@ -31,7 +31,6 @@ python3 radar.py
 - `generate_chart.py`：生成类目分布图
 - `report.md`：最终洞察报告
 - `EVOLUTION.md`：技术迭代和踩坑记录
-- `INTERVIEW_SCRIPT.md`：面试演讲稿
 - `docs/troubleshooting.md`：常见问题排查
 
 ## 主要发现
