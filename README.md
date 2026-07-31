@@ -27,6 +27,8 @@ MoonshotAI 有两个核心开源仓库：`kimi-code` 和 `kimi-agent-sdk`。它�
 | 付费用户额度投诉 | 多条年订阅 / 月订阅用户反馈 |
 | 模型质量反馈 | `model_behavior` 仅 7 条（1.6%） |
 
+> **关于样本量**：432 条是近期活跃 issue 的采样结果，不是两个仓库的全部 issue。`kimi-code` 实际约有 764 条 issue、`kimi-agent-sdk` 有 98 条。抓取层默认 `max_pages=10`，因此 `kimi-code` 只抓取到最近的 334 条有效 issue。这个样本对洞察趋势和 blocker 模式已足够，全量分析可调整分页参数。
+
 完整洞察见 [`report.md`](./report.md)。
 
 ### 类目分布
